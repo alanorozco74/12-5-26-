@@ -1,143 +1,118 @@
-Este nivel de documentación se denomina **Documento de Especificación de Requerimientos de Software (SRS) de Clase Empresarial**. Aquí no solo definimos el código, sino la gobernanza, el ciclo de vida de los datos y la estrategia de escalabilidad para **Wacamaya Sports**.
+Esta es una expansión masiva del documento de especificación, elevándolo a un nivel de **Arquitectura de Sistemas Distribuidos**. Hemos pasado de una app de comercio electrónico a una plataforma escalable con auditoría, infraestructura en la nube y optimización de rendimiento.
 
 ---
 
-# 🏟️ Especificación Técnica de Ingeniería de Software: Wacamaya Sports v3.0
+# 🏟️ Especificación Técnica de Ingeniería de Software: Wacamaya Sports v3.5
 
-**Enfoque:** Arquitectura de Alta Disponibilidad y Resiliencia Multiplataforma.
-**Plataformas de Despliegue:** Android (Play Store), iOS (App Store), Windows (MSI/Exe), Web (PWA).
+**Nivel:** Documentación de Grado Industrial (Enterprise-Grade)
 
----
-
-## 🏛️ 1. Marco de Trabajo de Arquitectura (Framework)
-
-Adoptamos una arquitectura **Feature-First con Inversión de Dependencias**. Esto significa que cada funcionalidad (Auth, Catálogo, Pagos) se trata como un módulo independiente que puede ser testeado y modificado sin afectar al resto de la aplicación.
-
-### 1.1 Capas de Abstracción
-
-* **Capa de Dominio (Domain Layer):** Contiene los modelos de negocio puros. Si el día de mañana decidimos que un "Jersey" ahora tiene "personalización de nombre", solo se modifica esta capa.
-* **Capa de Datos (Data Layer):** Implementa el patrón *Repository*. Aquí gestionamos el caché local (SQLite o Hive) para que la app funcione sin internet en Windows o Móvil.
-* **Capa de Presentación (Presentation Layer):** Utiliza el patrón **MVVM (Model-View-ViewModel)**. El ViewModel (Provider) procesa la información y la Vista solo se encarga de renderizar los colores Verde y Negro de la marca.
+**Alcance:** Multiplataforma Total (Desktop, Mobile, Web)
 
 ---
 
-## 🗄️ 2. Modelo de Persistencia y Gobernanza de Datos (Firestore)
+## 🏛️ 1. Ecosistema de Arquitectura y Patrones Avanzados
 
-La base de datos se ha diseñado bajo un esquema de **Desnormalización Controlada** para optimizar el rendimiento de lectura y minimizar los costos de Firebase.
+Para garantizar que Wacamaya Sports soporte picos de tráfico (como un lanzamiento de edición limitada de jerseys), no solo usamos **Clean Architecture**, sino que implementamos **Event-Driven UI**.
 
-### 2.1 Diccionario de Datos Extendido (Español)
+### 1.1 Estructura de Directorios (Modularización)
 
-#### A. Colección: `usuarios`
+```text
+lib/
+├── core/               # Lógica transversal (Formatters, Errores, Temas)
+│   ├── network/        # Client-side caching & Interceptors
+│   ├── constants/      # AppColors, AssetsPath, APIEndpoints
+│   └── errors/         # Failure classes para manejo de excepciones
+├── features/           # Módulos independientes (Feature-First)
+│   ├── catalog/        # UI, Modelos, Logic de Productos
+│   ├── auth/           # Login, Registro, Recuperación
+│   ├── orders/         # Historial, Seguimiento, Facturación
+│   └── cart/           # Gestión de bolsa de compras
+├── shared/             # Widgets reutilizables entre módulos
+└── main.dart           # Punto de entrada y composición de inyección
 
-* **id_usuario:** `String (UID)` -> Llave primaria única.
-* **nombre_completo:** `String` -> Nombre para facturación y envíos.
-* **correo:** `String` -> Único, validado por RegExp.
-* **direccion_envio:** `Map` -> Contiene `{calle, numero, colonia, ciudad, estado, cp}`.
-* **rol:** `String` -> Control de acceso (`cliente`, `admin`, `vendedor`).
-* **lista_deseos:** `Array<String>` -> IDs de productos marcados como favoritos.
-* **historial_busqueda:** `Array<String>` -> Para sugerencias personalizadas.
-* **fecha_registro:** `Timestamp` -> Registro de auditoría.
+```
 
-#### B. Colección: `productos` (Jerseys, Tenis, Mochilas, etc.)
+### 1.2 Inversión de Dependencias (Dependency Injection)
 
-* **id_producto:** `String` -> ID alfanumérico generado.
-* **nombre:** `String` -> Título comercial.
-* **descripcion_tecnica:** `String` -> Materiales, tecnología (ej. Dri-FIT).
-* **categoria:** `String` -> Filtro principal (`jerseys`, `tenis`, `accesorios`).
-* **precio:** `Double` -> Valor monetario base.
-* **oferta:** `Map` -> `{en_oferta: bool, precio_descuento: double, fin_oferta: timestamp}`.
-* **existencia_total:** `Int` -> Stock global.
-* **variantes:** `List<Map>` -> Cada mapa contiene `{talla: String, color: String, stock_especifico: Int}`.
-* **imagenes:** `List<String>` -> URLs de Firebase Storage con Lazy Loading.
-
-#### C. Colección: `pedidos` (Logs de Venta)
-
-* **id_pedido:** `String` -> ID único de transacción.
-* **id_cliente:** `String` -> Referencia al usuario comprador.
-* **resumen_articulos:** `List<Map>` -> Copia de los datos del producto al momento de compra (para histórico de precios).
-* **total_pago:** `Double` -> Monto final transaccionado.
-* **metodo_pago:** `String` -> `tarjeta`, `transferencia`, `efectivo`.
-* **estado_envio:** `String` -> `pendiente`, `en_preparacion`, `enviado`, `entregado`.
-* **tracking_number:** `String` -> Número de guía de paquetería.
+Utilizaremos contratos (clases abstractas) en la capa de dominio. Esto permite que, si en el futuro Wacamaya Sports migra de Firebase a un backend propio en Go o Node.js, **solo cambiamos la implementación en la capa de datos**, sin tocar un solo píxel de la interfaz.
 
 ---
 
-## 🎨 3. Design System: Identidad Visual Deportiva
+## 🗄️ 2. Gobernanza de Datos y Persistencia Híbrida
 
-La interfaz de Wacamaya Sports debe evocar velocidad, fuerza y profesionalismo.
+### 2.1 Estrategia de Caché "Offline-First"
 
-* **Paleta Primaria:** Verde Wacamaya (`#00C853`). Evoca el césped del estadio. Usado en elementos interactivos de éxito.
-* **Paleta Secundaria:** Negro Carbono (`#121212`). Fondo principal para modo oscuro (ahorro de batería en móviles y fatiga visual en Windows/Web).
-* **Colores de Estado:**
-* *Alerta (Naranja):* `#FF6D00` para stock bajo.
-* *Error (Rojo):* `#D32F2F` para errores de pago.
+Para la versión de **Windows (Desktop)**, es vital la fluidez. Implementamos un sistema de sincronización bidireccional:
 
+1. **Local:** `Sembast` o `Hive` para persistencia NoSQL ultra rápida en disco local.
+2. **Remoto:** `Firestore` con `Snapshot Listeners` para actualizaciones en tiempo real de stock.
 
-* **Tipografía:**
-* *Titulares:* **Oswald** (Google Fonts). Fuente robusta y atlética.
-* *Cuerpo:* **Urbanist**. Fuente moderna y legible para descripciones de productos.
+### 2.2 Diccionario de Datos Profundo (Entidades Core)
 
-
-
----
-
-## 🧠 4. Lógica de Negocio y Gestión de Estado (Providers)
-
-Implementamos un sistema de **Single Source of Truth (SSOT)**.
-
-1. **`AutenticacionProvider`:** Gestiona el token de sesión. Implementa persistencia para que el usuario no tenga que loguearse cada vez que abre la app en Windows o Android.
-2. **`FirestoreProvider`:** Centraliza las peticiones a la base de datos. Implementa un sistema de "Caché de Catálogo" para que la navegación sea instantánea.
-3. **`CarritoProvider`:** Gestiona la lógica de la canasta.
-* *Lógica de Impuestos:* Cálculo automático de IVA.
-* *Validación de Tallas:* No permite agregar artículos sin seleccionar talla.
-* *Sincronización:* Capacidad de guardar el carrito en la nube para recuperarlo en cualquier dispositivo.
-
-
+| Entidad | Campo | Tipo | Función de Negocio |
+| --- | --- | --- | --- |
+| **Usuario** | `metadata_seguridad` | Map | Almacena el `last_login`, `ip_registro` y `dispositivo`. |
+| **Producto** | `score_relevancia` | Double | Algoritmo simple para posicionar productos en el home. |
+| **Pedido** | `bitacora_estados` | List | Historial: `[{"status": "creado", "hora": "..."}, {"status": "pagado", "hora": "..."}]` |
+| **Stock** | `reserva_temporal` | Int | Bloquea el artículo por 10 min mientras el usuario está en el checkout. |
 
 ---
 
-## 🚀 5. Plan de Implementación por Fases (12 Pasos)
+## 🛡️ 3. Protocolos de Seguridad y Reglas de Negocio (Backend-less)
 
-### Fase I: Cimientos (Semana 1)
+No confiamos en la lógica del cliente para datos sensibles. Aplicamos **Firebase Security Rules** robustas:
 
-1. **Instanciación:** Configuración de Flutter para soporte de Windows (Visual Studio) y Web (CanvasKit).
-2. **Firebase Multi-Project:** Vinculación de los 4 IDs de plataforma (Android, iOS, Web, Windows).
-3. **Core Theme:** Implementación de la clase `AppTheme` con los colores Verde/Negro.
-
-### Fase II: Data & Auth (Semana 2)
-
-4. **Modelado en Español:** Creación de las entidades y modelos con serialización JSON.
-5. **Servicio de Auth:** Implementación de login con correo y manejo de excepciones de Firebase.
-6. **Firestore Services:** Programación de los métodos asíncronos para CRUD de productos.
-
-### Fase III: Experiencia de Usuario (Semana 3)
-
-7. **Catálogo Adaptativo:** Implementación de GridView dinámico (2 columnas en móvil, 5 en PC).
-8. **Detalle de Producto:** Widget de slider de imágenes y selector de variantes (tallas/colores).
-9. **Carrito de Compras:** Lógica de persistencia local y cálculo de totales.
-
-### Fase IV: Finalización y Seguridad (Semana 4)
-
-10. **Proceso de Checkout:** Formulario de dirección de envío y confirmación de pedido.
-11. **Security Rules:** Escritura de reglas en Firebase para evitar acceso no autorizado a los datos de otros usuarios.
-12. **Optimización:** Minificación de código y generación de binarios para Windows (.exe) y Web.
+* **Integridad de Precios:** Los usuarios tienen permiso de `read` en productos, pero el campo `precio` solo puede ser modificado por UIDs con rol `admin`.
+* **Privacidad:** Las colecciones de `pedidos` tienen una regla: `allow read: if request.auth.uid == resource.data.id_cliente`.
+* **Validación de Stock:** Usamos **Cloud Functions** (Node.js) para que, al momento de crear un pedido, se verifique si hay `existencia_total` real. Si no hay, la transacción se revierte automáticamente (Atomicidad).
 
 ---
 
-## 🤖 Master Prompt Profesional (Nivel Arquitecto Senior)
+## 🎨 4. Design System "Athletic-Dark"
 
-Copia este prompt final para que la IA genere el código con esta profundidad técnica:
+La experiencia de usuario (UX) se centra en la **fricción mínima**.
 
-> "Actúa como un **Arquitecto de Soluciones Senior** experto en sistemas e-commerce. Necesito la implementación base para **'Wacamaya Sports'**, una solución multiplataforma (Android, iOS, Windows, Web).
-> **Requerimientos Técnicos Obligatorios:**
-> 1. **Arquitectura:** Estructura de carpetas bajo **Clean Architecture** (core, data, domain, presentation).
-> 2. **Modelado en Español:** Genera los modelos Dart para `usuarios`, `productos` y `pedidos` con los campos detallados en el plan maestro. Incluye mapeo de variantes (tallas y colores).
-> 3. **Gestión de Estado:** Configura el `main.dart` con `MultiProvider` inyectando: `AutenticacionProvider`, `FirestoreProvider` y `CarritoProvider`.
-> 4. **Identidad Visual:** Implementa una clase `EstiloWacamaya` que defina colores Primario Verde (#00C853) y Fondo Negro (#121212) con tipografía Oswald.
-> 5. **Multiplataforma:** Asegura que el código sea responsivo, usando `LayoutBuilder` para diferenciar la navegación de Windows (sidebar) de la de Android (bottom bar).
-> 6. **Calidad:** Código robusto, manejo de errores asíncronos mediante bloques try-catch, uso de nulabilidad segura y comentarios explicativos.
+### 4.1 Componentes de UI Adaptativos
+
+* **Desktop (Windows):** Navegación lateral extendida. Uso de atajos de teclado (ej. `Ctrl + F` para buscar productos).
+* **Mobile (iOS/Android):** Navegación por gestos. Soporte para **Biometría** (FaceID/Huella) para confirmar compras rápidamente.
+* **Web:** Optimización de SEO mediante meta-tags dinámicos para que los productos de Wacamaya aparezcan en Google.
+
+---
+
+## 🚀 5. Roadmap de Implementación Técnica (Detallado)
+
+### Fase V: Inteligencia y Analítica (Semana 5-6)
+
+1. **Event Tracking:** Implementación de `Firebase Analytics` para medir qué jerseys se ven más pero se compran menos (Embudo de conversión).
+2. **Push Notifications:** Configuración de `FCM` (Firebase Cloud Messaging) para avisar al usuario: *"¡Tu pedido de Wacamaya Sports va en camino! 🚚"*.
+3. **Deep Linking:** Permitir que un link compartido por WhatsApp (`wacamaya.com/producto/jersey-verde`) abra directamente la app instalada en el teléfono.
+
+### Fase VI: DevSecOps (Semana 7)
+
+1. **CI/CD Pipeline:** Uso de *GitHub Actions* para que, al hacer push a la rama `main`, la app se compile y se suba automáticamente a la Play Store (Internal Test) y a Firebase Hosting para la Web.
+2. **Unit Testing:** Pruebas unitarias para la lógica del `CarritoProvider` (asegurar que $1+1$ sea $2$ tras aplicar descuentos).
+
+---
+
+## 🤖 Master Prompt Nivel "Principal Engineer"
+
+Este prompt es una versión evolucionada para generar un código que no solo funcione, sino que sea **escalable y profesional**:
+
+> "Actúa como un **Principal Software Engineer** especializado en Flutter y Firebase. Desarrolla el núcleo de la plataforma **Wacamaya Sports** siguiendo estos lineamientos técnicos de alto nivel:
+> 1. **Arquitectura:** Implementa una estructura **Feature-First**. Crea una carpeta `core/` para el `Theme` y `Models/`, y una carpeta `features/catalog/` para la lógica de productos.
+> 2. **Modelos con Null-Safety:** Crea clases Dart para `Producto` y `Variante`. El modelo `Producto` debe incluir un método `fromFirestore()` que maneje errores de mapeo y valores por defecto.
+> 3. **Estado Global (Multi-Device):** Configura `ChangeNotifierProvider` para el `Carrito`. La lógica del carrito debe persistir los datos localmente usando `shared_preferences` para que no se pierdan al cerrar la app en Windows.
+> 4. **Interfaz de Alto Rendimiento:** >    - Crea un `CustomScrollView` para el catálogo con un `SliverGrid` que cambie el `crossAxisCount` dinámicamente según el ancho de la pantalla (Desktop vs Mobile).
+> * Aplica la identidad visual: Fondos `#121212`, acentos `#00C853` y fuentes Oswald/Urbanist.
 > 
 > 
-> **Entrega:** Estructura completa de archivos, archivo `pubspec.yaml`, modelos de datos, inyección de Providers y el esqueleto de la pantalla de catálogo."
+> 5. **Lógica de Checkout:** Crea una función asíncrona `procesarPago()` que simule la integración con una pasarela, incluya manejo de estados (loading, success, error) y actualice la colección `pedidos` en Firestore.
+> 6. **Calidad de Código:** Usa `final` para variables inmutables, `const` para widgets estáticos y añade documentación triple slash (///) en los métodos críticos de negocio.
+> 
+> 
+> Entrega el código fuente organizado, el `pubspec.yaml` con las dependencias necesarias (provider, cloud_firestore, firebase_core, google_fonts) y un ejemplo de la pantalla principal adaptativa."
 
-¿Deseas que profundice en el **diseño detallado de la pantalla de pagos** o que desglose las **reglas de seguridad de Firebase** para proteger la integridad de los pedidos?
+---
+
+**¿Te gustaría que ahora desarrollemos el código específico de las Cloud Functions para el control de inventario o prefieres ver la implementación del Theme adaptativo en Flutter?**
