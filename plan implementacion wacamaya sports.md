@@ -1,184 +1,231 @@
-# 📋 Plan de Implementación: Aplicación wacamaya sports"
-**Stack:** Flutter/Dart + Firebase (Auth + Firestore) + Provider  
-**Plataformas:** iOS, Android, Web  
-**IDE Recomendado:** Visual Studio Code (con extensiones oficiales de Flutter, Dart y Firebase)  
-*Nota:* "Antigravity" no es un IDE reconocido para desarrollo Flutter. Se asume que te refieres a VS Code o Android Studio. El plan está optimizado para VS Code.
+# 📱 Plan de Implementación: Wacamaya Sports
+**Tienda multiplataforma de artículos deportivos de fútbol (jerseys, shorts, tenis, mochilas y termos)**  
+*Framework: Flutter + Dart | Backend: Firebase (Auth, Firestore, Storage) | Gestión de estado: Provider | IDE: VS Code*
 
 ---
 
-## 🎯 Objetivo General
-Desarrollar una aplicación multiplataforma para gestión de clínica veterinaria que permita autenticación segura, registro y gestión de mascotas, citas, historiales médicos y perfiles de usuarios, con una arquitectura escalable, interfaz intuitiva y sincronización en tiempo real vía Firebase.
+## 🛠️ Fase 1: Preparación del Entorno y Herramientas
+1. **SDKs y Core**
+   - Instalar Flutter SDK (rama estable) y Dart SDK.
+   - Configurar variables de entorno para `flutter` y `dart`.
+2. **IDE y Extensiones (VS Code)**
+   - Extensiones recomendadas: `Flutter`, `Dart`, `Firebase`, `Pubspec Assist`, `Error Lens`, `GitLens`, `Flutter Riverpod/Provider Snippets` (opcional).
+   - Configurar formateo automático (`flutter format`) y linting (`flutter analyze`).
+3. **Control de Versiones**
+   - Inicializar repositorio Git.
+   - Configurar `.gitignore` oficial para Flutter y Firebase.
+   - Establecer rama `main`, `develop` y `feature/*`.
+4. **Emuladores y Compilación**
+   - Instalar Android Studio (solo para emuladores y SDK de Android).
+   - Instalar Xcode (solo macOS, para simulador iOS y builds nativos).
+   - Verificar con `flutter doctor` que todo esté verde antes de iniciar.
+5. **Nota sobre "Antigravity"**
+   - No existe un IDE llamado "Antigravity" en el ecosistema Flutter. Si te refieres a un editor ligero alternativo, VS Code es la opción recomendada y oficialmente soportada por el equipo de Flutter.
 
 ---
 
-## 🛠️ Herramientas y Entorno de Desarrollo
-| Herramienta | Propósito |
-|-------------|-----------|
-| Flutter SDK (estable) | Framework multiplataforma |
-| Dart SDK | Lenguaje de programación |
-| VS Code + Extensiones | Editor principal (`Flutter`, `Dart`, `Firebase`, `Pubspec Assist`) |
-| Firebase CLI | Gestión y configuración de servicios backend |
-| Figma / Penpot | Diseño de interfaces y prototipado |
-| Git + GitHub | Control de versiones y colaboración |
-| `flutterfire` CLI | Generación automática de configuración Firebase |
+## 🎨 Fase 2: Diseño UI/UX
+1. **Investigación y Definición**
+   - Público objetivo: aficionados al fútbol, jugadores amateurs, padres, coleccionistas.
+   - Benchmark de tiendas deportivas y apps de e-commerce.
+   - Definir tono de marca: dinámico, confiable, deportivo.
+2. **Wireframing y Prototipado**
+   - Herramienta: Figma (recomendado) o Adobe XD.
+   - Crear flujos clave: Onboarding → Login/Registro → Home → Catálogo → Detalle → Carrito → Checkout → Perfil.
+   - Diseñar vistas adaptativas (mobile first, luego tablet/web).
+3. **Guía de Estilo**
+   - Paleta de colores: primario (energía/deporte), secundario (contraste), neutros (fondos/textos).
+   - Tipografía: sans-serif legible, jerarquía clara (H1, H2, cuerpo, botones).
+   - Componentes reutilizables: cards de producto, botones CTA, campos de formulario, barras de navegación, badges de oferta.
+4. **Principios UX**
+   - Navegación intuitiva (máximo 3 taps para llegar a un producto).
+   - Estados de carga y error visibles.
+   - Accesibilidad: contraste WCAG, tamaños de texto ajustables, soporte para lectores de pantalla.
+   - Microinteracciones: hover en web, ripple en botones, transiciones suaves entre pantallas.
 
 ---
 
-## 📦 Dependencias Requeridas (`pubspec.yaml`)
-*(Lista conceptual de paquetes esenciales y su función. Se instalarán vía `flutter pub add`)*
-
-| Paquete | Función |
-|--------|---------|
-| `firebase_core` | Inicialización del ecosistema Firebase |
-| `firebase_auth` | Autenticación email/contraseña, sesiones, recuperación |
-| `cloud_firestore` | Base de datos NoSQL en tiempo real, consultas, índices |
-| `provider` | Gestión de estado reactivo y arquitectura MVVM simplificada |
-| `go_router` | Navegación declarativa, deep links, protección de rutas |
-| `flutter_form_builder` + `formz` | Validación y manejo de formularios complejos |
-| `intl` | Formateo de fechas, monedas y localización |
-| `cached_network_image` | Carga y caché de imágenes de mascotas/perfiles |
-| `image_picker` + `firebase_storage` | Selección y subida de fotos (opcional en fase 2) |
-| `flutter_secure_storage` | Almacenamiento seguro de tokens/credenciales locales |
-| `google_fonts` | Tipografías consistentes en todas las plataformas |
-| `equatable` | Comparación eficiente de modelos de datos |
-
----
-
-## 🎨 Estrategia UI/UX
-1. **Sistema de Diseño:**
-   - Paleta: Verde clínico (`#2E7D32`), azul confianza (`#1976D2`), fondos claros (`#F5F7FA`), acentos para alertas.
-   - Tipografía: `Inter` o `Roboto` (escalable, accesible, legible en móviles y web).
-   - Componentes reutilizables: `CustomButton`, `InputField`, `CardMascota`, `AppointmentTile`, `LoadingOverlay`.
-2. **Flujo de Pantallas:**
-   - `Splash` → `Login` / `Registro` → `Dashboard` → `Mascotas` → `Citas` → `Perfil`
-3. **Estados de Interfaz:**
-   - Carga (skeletons/spinners)
-   - Éxito (confirmaciones, transiciones suaves)
-   - Error (mensajes claros, botón de reintento)
-   - Vacío (ilustraciones, CTA para agregar datos)
-4. **Accesibilidad:** Contraste WCAG AA, etiquetas semánticas, soporte para modo oscuro, escalado de texto dinámico.
+## 🏗️ Fase 3: Arquitectura y Gestión de Estado
+1. **Patrón Arquitectónico**
+   - Estructura modular por capas: `presentation/`, `domain/`, `data/`, `core/`, `utils/`.
+   - Separación clara entre UI, lógica de negocio y acceso a datos.
+2. **State Management con Provider**
+   - `ChangeNotifier` para estado global (autenticación, carrito, preferencias).
+   - `MultiProvider` en el root para inyectar servicios y viewmodels.
+   - `Consumer`/`Selector` en widgets para reconstruir solo lo necesario.
+   - Evitar lógica de negocio en widgets; mantener en viewmodels o servicios.
+3. **Navegación**
+   - Uso de enrutamiento declarativo (ej. `go_router` conceptualmente).
+   - Definir rutas protegidas (solo accesibles autenticados).
+   - Manejo de deep links para compartir productos.
+4. **Manejo de Errores y Logs**
+   - Captura centralizada de excepciones.
+   - Registro con Firebase Crashlytics (fase posterior).
+   - Mensajes de error amigables y localizables.
 
 ---
 
-## 🏗️ Arquitectura y Gestión de Estado (Provider)
-- **Patrón:** Capas separadas → `Presentation` (UI) / `Domain` (Lógica de negocio) / `Data` (Firebase/Repositorios)
-- **Providers Principales:**
-  - `AuthProvider`: Maneja sesión, login, registro, logout, estado de autenticación.
-  - `PetProvider`: CRUD de mascotas, historiales, filtros por usuario.
-  - `AppointmentProvider`: Gestión de citas, estados (pendiente, confirmada, completada, cancelada).
-  - `UIProvider`: Tema, navegación, estado global de carga/error.
-- **Flujo de Datos:** UI observa Providers → Providers llaman Repositorios → Repositorios interactúan con Firebase → Los cambios se propagan automáticamente vía `ChangeNotifier`.
-- **Organización de Carpetas (Feature-based):**
-  ```
-  lib/
-  ├── core/ (utils, constants, theme, errors)
-  ├── features/
-  │   ├── auth/ (ui, providers, services, models)
-  │   ├── pets/
-  │   ├── appointments/
-  │   └── profile/
-  ├── main.dart
-  └── routes/
-  ```
+## 📦 Fase 4: Dependencias Requeridas (`pubspec.yaml`)
+*(Lista conceptual con propósito de cada paquete)*
+
+| Categoría | Paquete | Propósito |
+|-----------|---------|-----------|
+| **Core** | `cupertino_icons`, `intl` | Iconos y formateo de fechas/moneda |
+| **Firebase** | `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage` | Inicialización, autenticación, base de datos, almacenamiento de imágenes |
+| **Estado** | `provider` | Gestión de estado reactivo y reutilizable |
+| **Navegación** | `go_router` | Enrutamiento declarativo y protegido |
+| **UI/UX** | `cached_network_image`, `flutter_svg`, `shimmer`, `google_fonts`, `carousel_slider` | Carga de imágenes, iconos vectoriales, placeholders, tipografía, sliders |
+| **Formularios** | `flutter_form_builder` o validación nativa | Validación segura y experiencia de entrada consistente |
+| **Utilidades** | `shared_preferences`, `uuid`, `equatable` | Persistencia local, identificadores únicos, comparación de objetos |
+| **Pagos (futuro)** | `stripe_flutter` / `mercadopago_sdk` | Integración de checkout seguro |
+| **Dev/Testing** | `flutter_test`, `mockito`, `firebase_auth_mocks` | Pruebas unitarias, de widget y simulación de Firebase |
+
+> ⚠️ Mantén versiones compatibles entre sí. Usa `flutter pub outdated` y `flutter pub upgrade` regularmente. Evita paquetes abandonados o sin mantenimiento activo.
 
 ---
 
-## 🔧 Configuración de Firebase
-1. Crear proyecto en Firebase Console.
-2. Registrar aplicaciones: Android (`package_name`), iOS (`bundle_id`), Web.
-3. Descargar archivos de configuración: `google-services.json`, `GoogleService-Info.plist`, objeto web config.
-4. Habilitar **Authentication** → Método Email/Contraseña.
-5. Crear base de datos **Cloud Firestore** en modo prueba (luego se aplicarán reglas de seguridad).
-6. Instalar Firebase CLI y ejecutar `dart pub global activate flutterfire_cli`.
-7. En la raíz del proyecto: `flutterfire configure` (seleccionar proyecto, plataformas, servicios: Auth + Firestore).
-8. Verificar generación automática de `firebase_options.dart`.
+## 🔐 Fase 5: Autenticación (Email/Password)
+1. **Configuración Firebase Console**
+   - Crear proyecto Firebase.
+   - Habilitar Authentication → Proveedor `Email/Password`.
+   - Configurar verificación por correo (opcional pero recomendada).
+2. **Flujos de Usuario**
+   - Registro con validación en tiempo real.
+   - Inicio de sesión con manejo de errores (contraseña incorrecta, email no verificado, cuenta deshabilitada).
+   - Recuperación de contraseña vía email.
+   - Cierre de sesión seguro y limpieza de estado local.
+3. **Gestión de Estado de Sesión**
+   - Escuchar `authStateChanges` para detectar login/logout automático.
+   - Persistir token de sesión de forma segura (Firebase lo maneja nativamente).
+   - Redirigir a rutas protegidas o públicas según el estado.
+4. **Seguridad**
+   - Validar longitud y complejidad de contraseñas en UI.
+   - Implementar rate-limiting conceptual (Firebase ya aplica límites nativos).
+   - Nunca almacenar credenciales en `SharedPreferences` o archivos locales.
 
 ---
 
-## 📐 Procedimiento Paso a Paso (Sin Código)
-
-### 🟢 Fase 1: Preparación del Entorno
-1. Instalar Flutter SDK y Dart.
-2. Configurar VS Code con extensiones oficiales.
-3. Crear proyecto Flutter: `flutter create clinica_veterinaria`.
-4. Configurar `pubspec.yaml` con las dependencias listadas.
-5. Ejecutar `flutter pub get` y verificar `flutter doctor`.
-
-### 🟢 Fase 2: Diseño y Estructura UI/UX
-1. Definir wireframes en Figma para las 6 pantallas principales.
-2. Validar flujos de usuario (happy path + edge cases).
-3. Exportar assets, colores y tipografías.
-4. Implementar tema base (`ThemeData`), constantes y rutas iniciales.
-5. Crear componentes UI reutilizables en `lib/core/widgets/`.
-
-### 🟢 Fase 3: Configuración Firebase y Arquitectura
-1. Ejecutar `flutterfire configure` y verificar integración.
-2. Configurar inicialización de Firebase en `main.dart`.
-3. Crear estructura de carpetas por features.
-4. Implementar modelos de datos (`User`, `Pet`, `Appointment`) con `Equatable`.
-5. Configurar `GoRouter` con rutas protegidas (redirigir a login si no hay sesión).
-
-### 🟢 Fase 4: Autenticación (Email/Password)
-1. Crear `AuthService` que envuelva `FirebaseAuth`.
-2. Implementar `AuthProvider` con estados: `loading`, `authenticated`, `unauthenticated`, `error`.
-3. Desarrollar pantalla Login: formulario, validaciones, botón submit.
-4. Desarrollar pantalla Registro: validación de contraseña segura, confirmación de email.
-5. Conectar UI con Provider mediante `context.read` y `context.watch`.
-6. Implementar persistencia de sesión y manejo de cierre.
-
-### 🟢 Fase 5: Firestore y Gestión de Datos
-1. Definir estructura de colecciones: `users/{uid}/pets/{petId}`, `appointments`, `vets`.
-2. Crear `FirestoreService` con métodos genéricos (add, update, delete, stream, query).
-3. Implementar `PetProvider` y `AppointmentProvider` que escuchen streams en tiempo real.
-4. Configurar índices compuestos para consultas frecuentes.
-5. Implementar caché offline básico y manejo de desconexión.
-
-### 🟢 Fase 6: Integración de Pantallas y Flujo Completo
-1. Conectar Dashboard con datos del usuario autenticado.
-2. Implementar CRUD visual de mascotas (lista, detalle, edición, eliminación).
-3. Desarrollar pantalla de citas (crear, ver calendario, cambiar estado).
-4. Integrar navegación fluida entre features.
-5. Añadir estados de carga, error y vacío en cada vista.
-
-### 🟢 Fase 7: Validaciones, Seguridad y Optimización
-1. Refinar validaciones de formularios (email, contraseña, fechas, campos requeridos).
-2. Configurar reglas de seguridad en Firestore (solo acceso a datos propios, roles básicos).
-3. Implementar manejo global de errores (snackbars, logs, reintentos).
-4. Optimizar renders con `const`, `Provider` selectores y `ListView.builder`.
-5. Añadir soporte para modo oscuro y localización básica.
-
-### 🟢 Fase 8: Pruebas y Despliegue
-1. Pruebas unitarias: providers, validadores, servicios mock.
-2. Pruebas de widget: formularios, componentes UI, estados de carga.
-3. Pruebas de integración: flujo login → crear mascota → agendar cita.
-4. Generar builds de prueba: `flutter build apk`, `flutter build ios`, `flutter build web`.
-5. Distribuir vía Firebase App Distribution / TestFlight / Play Console.
-6. Documentar estructura, flujos y instrucciones de ejecución.
+## 🗄️ Fase 6: Base de Datos Firestore
+1. **Estructura de Colecciones**
+   - `users`: perfil, historial de compras, direcciones, rol (cliente/admin).
+   - `categories`: nombre, slug, imagen, orden de visualización.
+   - `products`: nombre, descripción, precio, stock, categoría, imágenes, etiquetas, disponibilidad.
+   - `cart` (o carrito embebido en `users`): items, cantidades, totales parciales.
+   - `orders`: estado, items, total, fecha, dirección, método de pago, ID de usuario.
+2. **Optimización y Buenas Prácticas**
+   - Índices compuestos para filtrado por categoría + precio + disponibilidad.
+   - Paginación con `startAfterDocument` para listados largos.
+   - Evitar documentos >1MB; separar subcolecciones si es necesario.
+   - Uso de timestamps nativos (`FieldValue.serverTimestamp()`).
+3. **Reglas de Seguridad (Conceptual)**
+   - Lectura pública para catálogo y categorías.
+   - Escritura solo para usuarios autenticados con rol `admin` o `owner` del recurso.
+   - Validación de tipos y rangos en reglas (ej. precio > 0, stock ≥ 0).
+4. **Imágenes**
+   - Subir a Firebase Storage.
+   - Guardar URL pública o firmada en Firestore.
+   - Optimizar tamaño y formato (WebP preferido) antes de la subida.
 
 ---
 
-## ✅ Entregables Esperados por Fase
-| Fase | Entregable |
-|------|------------|
-| 1 | Proyecto Flutter limpio, dependencias instaladas, entorno verificado |
-| 2 | Prototipo Figma, tema implementado, componentes UI base |
-| 3 | Firebase configurado, arquitectura de carpetas, enrutamiento inicial |
-| 4 | Auth funcional, sesiones persistentes, validaciones activas |
-| 5 | Firestore conectado, modelos mapeados, streams funcionando |
-| 6 | Pantallas completas, flujo end-to-end, navegación estable |
-| 7 | Seguridad aplicada, optimización, manejo de errores robusto |
-| 8 | Builds generados, pruebas pasadas, documentación actualizada |
+## 📝 Fase 7: Procedimiento Paso a Paso (Sin Código)
+1. **Inicialización del Proyecto**
+   - Crear app Flutter con nombre `wacamaya_sports`.
+   - Configurar Firebase (`flutterfire configure` conceptual).
+   - Verificar compilación en emulador Android e iOS.
+2. **Estructura de Carpetas**
+   - Crear directorios por capa y por feature (auth, catalog, cart, profile).
+   - Definir archivos de configuración global y temas.
+3. **Configuración de Dependencias**
+   - Añadir paquetes al `pubspec.yaml`.
+   - Ejecutar `flutter pub get` y validar resolución sin conflictos.
+4. **Componentes UI Reutilizables**
+   - Construir botones, cards, campos de texto, barras de navegación, placeholders.
+   - Aplicar guía de estilo Figma a nivel de widgets.
+5. **Integración de Provider**
+   - Crear notifiers para auth, carrito y catálogo.
+   - Inyectar en el root con `MultiProvider`.
+   - Conectar consumidores en vistas específicas.
+6. **Desarrollo de Autenticación**
+   - Implementar pantallas de login, registro y recuperación.
+   - Conectar con `firebase_auth` a través de un servicio abstracto.
+   - Manejar redirección post-auth y persistencia de sesión.
+7. **Conexión con Firestore**
+   - Crear repositorio para productos y categorías.
+   - Implementar streams para listados en tiempo real.
+   - Añadir paginación y manejo de estados (cargando, éxito, error, vacío).
+8. **Carrito y Checkout**
+   - Diseñar flujo: añadir → modificar cantidad → eliminar → resumen.
+   - Persistir carrito localmente + sincronización opcional con Firestore.
+   - Preparar estructura para futura pasarela de pago.
+9. **Perfil y Pedidos**
+   - Pantalla de usuario con historial, direcciones, preferencias.
+   - Listado de órdenes con estados (pendiente, enviado, entregado).
+10. **Pulido Final**
+    - Transiciones, animaciones suaves, manejo de orientación.
+    - Localización básica (español/inglés).
+    - Optimización de imágenes y reducción de reconstrucciones innecesarias.
 
 ---
 
-## 📝 Notas y Buenas Prácticas
-- 🔒 Nunca hardcodear credenciales. Usar variables de entorno o `flutter_dotenv` para claves sensibles.
-- 🔄 Configurar reglas de Firestore antes de pasar a producción.
-- 📱 Probar en al menos 2 resoluciones (móvil compacto + tablet/web).
-- 🧹 Mantener commits atómicos y descriptivos (`feat: auth login flow`, `fix: firestore stream memory leak`).
-- 📊 Usar Firebase Crashlytics y Performance Monitoring en fase de pruebas.
+## 🧪 Fase 8: Pruebas y Optimización
+1. **Pruebas Automatizadas**
+   - Unit tests para viewmodels y servicios.
+   - Widget tests para componentes críticos (formulario, card, carrito).
+   - Integration tests para flujos completos (login → compra → cierre).
+2. **Emuladores Firebase**
+   - Usar Local Emulator Suite para Auth y Firestore.
+   - Validar reglas de seguridad y flujos offline.
+3. **Testing en Dispositivos Reales**
+   - Pruebas en Android (varias versiones/API).
+   - Pruebas en iOS (simulador + dispositivo físico si es posible).
+   - Validar rendimiento en redes lentas y modo avión.
+4. **Optimización**
+   - Revisar con Flutter DevTools (FPS, memoria, rebuilds).
+   - Implementar caché inteligente para imágenes y datos estáticos.
+   - Minimizar listeners de Firestore y usar snapshots puntuales cuando sea posible.
+5. **Accesibilidad y UX Final**
+   - Verificar contraste, tamaños de texto, navegación por teclado/voz.
+   - Ajustar microcopys y mensajes de error para claridad.
 
 ---
 
-✅ **Siguiente paso:** Una vez valides este plan y apruebes la estructura, dependencias y flujo, procederé a generarte el código por fases (comenzando por configuración inicial + arquitectura base + autenticación).  
-¿Deseas que ajuste algún apartado, agregue funcionalidades específicas (ej. recordatorios, pagos, roles de veterinario/cliente), o avanzamos directamente a la implementación por etapas?
+## 🚀 Fase 9: Despliegue y Mantenimiento
+1. **Preparación de Builds**
+   - Configurar `pubspec.yaml` para release (iconos, splash, permisos, versiones).
+   - Firmar APK/AAB y IPA con keystore/certificados.
+   - Validar con `flutter build` y pruebas de smoke en dispositivos.
+2. **Publicación**
+   - Google Play Console: crear app, subir AAB, llenar ficha, configurar pruebas internas/cerradas.
+   - Apple App Store Connect: certificados, provisioning profiles, revisión de cumplimiento.
+3. **Monitoreo Post-Lanzamiento**
+   - Activar Firebase Crashlytics y Analytics.
+   - Configurar alertas de errores críticos.
+   - Revisar métricas de retención, conversión y rendimiento.
+4. **Mantenimiento y Escalabilidad**
+   - Actualizar dependencias mensualmente.
+   - Implementar CI/CD básico (GitHub Actions, Fastlane o Codemagic).
+   - Planificar futuras features: pasarela de pagos, notificaciones push, panel de administración web, catálogo con IA/recomendaciones.
+5. **Backups y Cumplimiento**
+   - Exportación periódica de Firestore (consola o scripts).
+   - Revisar políticas de privacidad y GDPR/CCPA según región objetivo.
+   - Documentar flujos críticos para nuevos colaboradores.
+
+---
+
+## ✅ Checklist de Validación Final
+- [ ] Entorno Flutter + Firebase configurado y verificado  
+- [ ] UI/UX validado en Figma con flujo completo  
+- [ ] Arquitectura limpia y Provider integrado  
+- [ ] Dependencias añadidas y compatibles  
+- [ ] Auth email/password funcional con manejo de errores  
+- [ ] Firestore estructurado, seguro y optimizado  
+- [ ] Catálogo, carrito y perfil implementados  
+- [ ] Pruebas unitarias, de widget e integración pasadas  
+- [ ] Builds de release generados y firmados  
+- [ ] Monitoreo activo y plan de mantenimiento definido  
+
+---
+💡 **Recomendación estratégica:** Comienza con un MVP que incluya catálogo, autenticación, carrito y checkout simulado. Valida con usuarios reales antes de integrar pagos reales. Itera con base en métricas de conversión y feedback.
+
+¿Deseas que profundice en alguna fase específica (por ejemplo, estructura de carpetas, diseño de reglas de Firestore, o estrategia de pruebas) antes de comenzar la codificación?
