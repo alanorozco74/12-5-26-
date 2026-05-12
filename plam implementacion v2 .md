@@ -1,118 +1,119 @@
-Esta es una expansión masiva del documento de especificación, elevándolo a un nivel de **Arquitectura de Sistemas Distribuidos**. Hemos pasado de una app de comercio electrónico a una plataforma escalable con auditoría, infraestructura en la nube y optimización de rendimiento.
+Esta es la culminación del **SRS (Software Requirements Specification)** para **Wacamaya Sports v4.0**. En este nivel, la documentación no es solo una guía de desarrollo, sino un **Contrato de Arquitectura** que asegura la viabilidad técnica, comercial y operativa del sistema a largo plazo.
+
+Hemos añadido secciones de **Infraestructura de Red**, **Estrategia de DevOps**, **Manejo de Errores a nivel de Kernel de App** y un **Modelo de Escalabilidad Horizontal**.
 
 ---
 
-# 🏟️ Especificación Técnica de Ingeniería de Software: Wacamaya Sports v3.5
+# 🏟️ Especificación Técnica de Ingeniería de Software: Wacamaya Sports v4.0
 
-**Nivel:** Documentación de Grado Industrial (Enterprise-Grade)
-
-**Alcance:** Multiplataforma Total (Desktop, Mobile, Web)
+**Enfoque:** Ecosistema Digital Unificado con Resiliencia Crítica.
 
 ---
 
-## 🏛️ 1. Ecosistema de Arquitectura y Patrones Avanzados
+## 🏛️ 1. Filosofía de Ingeniería y Patrones de Diseño
 
-Para garantizar que Wacamaya Sports soporte picos de tráfico (como un lanzamiento de edición limitada de jerseys), no solo usamos **Clean Architecture**, sino que implementamos **Event-Driven UI**.
+Para Wacamaya Sports, no basta con que el código "funcione". Debe ser **mantenible por equipos distribuidos**.
 
-### 1.1 Estructura de Directorios (Modularización)
+### 1.1 Inyección de Dependencias y desacoplamiento
 
-```text
-lib/
-├── core/               # Lógica transversal (Formatters, Errores, Temas)
-│   ├── network/        # Client-side caching & Interceptors
-│   ├── constants/      # AppColors, AssetsPath, APIEndpoints
-│   └── errors/         # Failure classes para manejo de excepciones
-├── features/           # Módulos independientes (Feature-First)
-│   ├── catalog/        # UI, Modelos, Logic de Productos
-│   ├── auth/           # Login, Registro, Recuperación
-│   ├── orders/         # Historial, Seguimiento, Facturación
-│   └── cart/           # Gestión de bolsa de compras
-├── shared/             # Widgets reutilizables entre módulos
-└── main.dart           # Punto de entrada y composición de inyección
+Utilizaremos un contenedor de dependencias (como `GetIt` o `Riverpod`) para separar la interfaz de usuario de la lógica de servicios. Esto permite realizar **Unit Testing** sin necesidad de conectarse a la base de datos real.
 
-```
+### 1.2 Flujo de Datos Unidireccional (UDF)
 
-### 1.2 Inversión de Dependencias (Dependency Injection)
+Para evitar estados inconsistentes (ej. que el carrito muestre un precio y el total otro), implementamos un flujo unidireccional:
 
-Utilizaremos contratos (clases abstractas) en la capa de dominio. Esto permite que, si en el futuro Wacamaya Sports migra de Firebase a un backend propio en Go o Node.js, **solo cambiamos la implementación en la capa de datos**, sin tocar un solo píxel de la interfaz.
+1. **Evento:** El usuario presiona "Agregar al carrito".
+2. **Estado:** El `CartProvider` procesa la lógica, valida stock y emite un nuevo *Estado Inmutable*.
+3. **UI:** La pantalla se reconstruye basándose exclusivamente en ese nuevo estado.
 
 ---
 
-## 🗄️ 2. Gobernanza de Datos y Persistencia Híbrida
+## 🗄️ 2. Modelo de Datos Avanzado y Estrategia NoSQL
 
-### 2.1 Estrategia de Caché "Offline-First"
+En Firestore, el costo se mide por lectura/escritura. Nuestra estrategia es la **Agregación de Datos**.
 
-Para la versión de **Windows (Desktop)**, es vital la fluidez. Implementamos un sistema de sincronización bidireccional:
+### 2.1 Esquema de Colecciones "High-Performance"
 
-1. **Local:** `Sembast` o `Hive` para persistencia NoSQL ultra rápida en disco local.
-2. **Remoto:** `Firestore` con `Snapshot Listeners` para actualizaciones en tiempo real de stock.
+#### A. Colección: `configuracion_global` (Documento Único)
 
-### 2.2 Diccionario de Datos Profundo (Entidades Core)
+Contiene parámetros dinámicos que la app descarga al iniciar sin consultar toda la base de datos:
 
-| Entidad | Campo | Tipo | Función de Negocio |
-| --- | --- | --- | --- |
-| **Usuario** | `metadata_seguridad` | Map | Almacena el `last_login`, `ip_registro` y `dispositivo`. |
-| **Producto** | `score_relevancia` | Double | Algoritmo simple para posicionar productos en el home. |
-| **Pedido** | `bitacora_estados` | List | Historial: `[{"status": "creado", "hora": "..."}, {"status": "pagado", "hora": "..."}]` |
-| **Stock** | `reserva_temporal` | Int | Bloquea el artículo por 10 min mientras el usuario está en el checkout. |
+* `banner_promocional_url`: String.
+* `version_minima_requerida`: String (fuerza la actualización si hay cambios críticos).
+* `mantenimiento_activo`: Boolean (bloquea la app en caso de despliegue crítico).
 
----
+#### B. Colección: `inventario_logico` (Subcolección de Productos)
 
-## 🛡️ 3. Protocolos de Seguridad y Reglas de Negocio (Backend-less)
+Separamos el stock de la descripción para evitar lecturas innecesarias:
 
-No confiamos en la lógica del cliente para datos sensibles. Aplicamos **Firebase Security Rules** robustas:
-
-* **Integridad de Precios:** Los usuarios tienen permiso de `read` en productos, pero el campo `precio` solo puede ser modificado por UIDs con rol `admin`.
-* **Privacidad:** Las colecciones de `pedidos` tienen una regla: `allow read: if request.auth.uid == resource.data.id_cliente`.
-* **Validación de Stock:** Usamos **Cloud Functions** (Node.js) para que, al momento de crear un pedido, se verifique si hay `existencia_total` real. Si no hay, la transacción se revierte automáticamente (Atomicidad).
+* `id_variante`: String (SKU).
+* `stock_reservado`: Int (artículos en carritos activos).
+* `stock_disponible`: Int (existencia física menos reservados).
 
 ---
 
-## 🎨 4. Design System "Athletic-Dark"
+## 🛡️ 3. Seguridad, Cumplimiento y Middleware
 
-La experiencia de usuario (UX) se centra en la **fricción mínima**.
+### 3.1 Cifrado y Tránsito
 
-### 4.1 Componentes de UI Adaptativos
+* **SSL Pinning:** Para las versiones de iOS y Android, implementamos SSL Pinning para evitar ataques de *Man-in-the-Middle* en redes Wi-Fi públicas (estadios, centros comerciales).
+* **Ofuscación de Código:** Durante el build de producción para Windows (.exe), se aplicará ofuscación de símbolos para dificultar la ingeniería inversa.
 
-* **Desktop (Windows):** Navegación lateral extendida. Uso de atajos de teclado (ej. `Ctrl + F` para buscar productos).
-* **Mobile (iOS/Android):** Navegación por gestos. Soporte para **Biometría** (FaceID/Huella) para confirmar compras rápidamente.
-* **Web:** Optimización de SEO mediante meta-tags dinámicos para que los productos de Wacamaya aparezcan en Google.
+### 3.2 Firebase Cloud Functions (El "Backend" Invisible)
 
----
+Lógica que **nunca** debe estar en el celular del cliente:
 
-## 🚀 5. Roadmap de Implementación Técnica (Detallado)
-
-### Fase V: Inteligencia y Analítica (Semana 5-6)
-
-1. **Event Tracking:** Implementación de `Firebase Analytics` para medir qué jerseys se ven más pero se compran menos (Embudo de conversión).
-2. **Push Notifications:** Configuración de `FCM` (Firebase Cloud Messaging) para avisar al usuario: *"¡Tu pedido de Wacamaya Sports va en camino! 🚚"*.
-3. **Deep Linking:** Permitir que un link compartido por WhatsApp (`wacamaya.com/producto/jersey-verde`) abra directamente la app instalada en el teléfono.
-
-### Fase VI: DevSecOps (Semana 7)
-
-1. **CI/CD Pipeline:** Uso de *GitHub Actions* para que, al hacer push a la rama `main`, la app se compile y se suba automáticamente a la Play Store (Internal Test) y a Firebase Hosting para la Web.
-2. **Unit Testing:** Pruebas unitarias para la lógica del `CarritoProvider` (asegurar que $1+1$ sea $2$ tras aplicar descuentos).
+* **`onOrderCreated`**: Al crear un pedido, esta función se dispara, valida el pago con la API de Stripe/PayPal y genera la factura en PDF enviándola por correo automáticamente.
+* **`cleanTempCarts`**: Tarea programada (Cron Job) que libera el stock de carritos abandonados por más de 24 horas.
 
 ---
 
-## 🤖 Master Prompt Nivel "Principal Engineer"
+## 🚀 4. DevOps y Ciclo de Vida del Software (SDLC)
 
-Este prompt es una versión evolucionada para generar un código que no solo funcione, sino que sea **escalable y profesional**:
+### 4.1 Entornos de Ejecución
 
-> "Actúa como un **Principal Software Engineer** especializado en Flutter y Firebase. Desarrolla el núcleo de la plataforma **Wacamaya Sports** siguiendo estos lineamientos técnicos de alto nivel:
-> 1. **Arquitectura:** Implementa una estructura **Feature-First**. Crea una carpeta `core/` para el `Theme` y `Models/`, y una carpeta `features/catalog/` para la lógica de productos.
-> 2. **Modelos con Null-Safety:** Crea clases Dart para `Producto` y `Variante`. El modelo `Producto` debe incluir un método `fromFirestore()` que maneje errores de mapeo y valores por defecto.
-> 3. **Estado Global (Multi-Device):** Configura `ChangeNotifierProvider` para el `Carrito`. La lógica del carrito debe persistir los datos localmente usando `shared_preferences` para que no se pierdan al cerrar la app en Windows.
-> 4. **Interfaz de Alto Rendimiento:** >    - Crea un `CustomScrollView` para el catálogo con un `SliverGrid` que cambie el `crossAxisCount` dinámicamente según el ancho de la pantalla (Desktop vs Mobile).
-> * Aplica la identidad visual: Fondos `#121212`, acentos `#00C853` y fuentes Oswald/Urbanist.
+1. **Development (DEV):** Sandbox para programadores.
+2. **Staging (STG):** Réplica exacta de producción para pruebas de QA y demos.
+3. **Production (PRD):** Entorno final con escalado automático.
+
+### 4.2 Estrategia de Despliegue (Blue-Green Deployment)
+
+Al lanzar una nueva versión de Wacamaya Sports en la Web, no reemplazamos el código viejo de inmediato. Mantenemos ambas versiones corriendo y desviamos el 10% del tráfico a la nueva para asegurar que no haya errores (Canary Releases).
+
+---
+
+## 📉 5. Plan de Contingencia y Observabilidad (SRE)
+
+### 5.1 Monitoreo de Errores (Sentry/Crashlytics)
+
+Cada vez que la app falle en la computadora de un cliente en Windows, recibiremos un log detallado que incluye:
+
+* Especificaciones de hardware (RAM, CPU).
+* Traza del error (Stacktrace).
+* Últimas 5 acciones del usuario antes del crash.
+
+---
+
+## 🤖 Master Prompt Nivel "Software Architect & Product Owner"
+
+Este prompt es el más completo hasta la fecha. Úsalo para generar el esqueleto lógico de toda la plataforma:
+
+> "Genera la arquitectura base para **Wacamaya Sports v4.0**, una solución de e-commerce de alto rendimiento.
+> **Especificaciones de Código:**
+> 1. **Patrón de Arquitectura:** Clean Architecture dividida en `Data`, `Domain` y `Presentation`.
+> 2. **Modelado de Datos (Dart):** Crea entidades inmutables usando `freezed` o `equatable`. Define el modelo `Product` con soporte para `variantes` (talla/color) y el modelo `Order` con un `StatusEnum` (Pendiente, Pagado, Enviado).
+> 3. **Gestión de Estado Pro:** Configura un `MultiProvider` que incluya un `ThemeProvider` (para cambio dinámico de Verde Wacamaya a Modo Oscuro) y un `InventoryProvider` que use `Streams` para actualizar el stock en tiempo real.
+> 4. **Capa de Servicio (API):** Crea una clase abstracta `BaseRepository` y su implementación `FirebaseRepository`. Incluye manejo de errores personalizado con una clase `AppException`.
+> 5. **UI Responsiva:** Diseña un Widget `WacamayaScaffold` que detecte automáticamente si la app corre en un monitor 4K (Windows) o en un iPhone SE, ajustando los márgenes y el tamaño de la tipografía Oswald.
+> 6. **Internacionalización básica:** Configura el soporte para español (es) como idioma nativo.
 > 
 > 
-> 5. **Lógica de Checkout:** Crea una función asíncrona `procesarPago()` que simule la integración con una pasarela, incluya manejo de estados (loading, success, error) y actualice la colección `pedidos` en Firestore.
-> 6. **Calidad de Código:** Usa `final` para variables inmutables, `const` para widgets estáticos y añade documentación triple slash (///) en los métodos críticos de negocio.
-> 
-> 
-> Entrega el código fuente organizado, el `pubspec.yaml` con las dependencias necesarias (provider, cloud_firestore, firebase_core, google_fonts) y un ejemplo de la pantalla principal adaptativa."
+> **Resultado esperado:** Estructura de archivos completa, `pubspec.yaml` optimizado, y la implementación del `AuthService` con manejo de persistencia de sesión."
 
 ---
 
-**¿Te gustaría que ahora desarrollemos el código específico de las Cloud Functions para el control de inventario o prefieres ver la implementación del Theme adaptativo en Flutter?**
+### 💡 Próximos Pasos Sugeridos:
+
+1. **Módulo de Analítica:** ¿Quieres que desgloce cómo medir el ROI (Retorno de Inversión) dentro de la app?
+2. **Módulo de Logística:** ¿Deseas la integración técnica con APIs de paquetería (FedEx/DHL) para el rastreo en tiempo real?
+3. **Código UI:** ¿Prefieres que empiece a generar el código de la pantalla de inicio con el efecto de "Parallax" en los jerseys?
