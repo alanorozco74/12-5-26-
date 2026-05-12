@@ -1,4 +1,4 @@
-# 📋 Plan de Implementación: Aplicación "Clínica Veterinaria"
+# 📋 Plan de Implementación: Aplicación wacamaya sports"
 **Stack:** Flutter/Dart + Firebase (Auth + Firestore) + Provider  
 **Plataformas:** iOS, Android, Web  
 **IDE Recomendado:** Visual Studio Code (con extensiones oficiales de Flutter, Dart y Firebase)  
