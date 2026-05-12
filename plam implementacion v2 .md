@@ -1,122 +1,80 @@
-¡Entendido! Como arquitecto de software, he diseñado una hoja de ruta técnica de nivel industrial. He integrado el concepto de **Antigravity** como tu entorno de alto rendimiento y he estructurado las bases de datos con un enfoque relacional/NoSQL optimizado para una tienda deportiva multiplataforma.
+Entendido. He ajustado el diseño de la base de datos para que todos los campos y la lógica interna de **Wacamaya Sports** estén en español, manteniendo el estándar profesional de nomenclatura para facilitar el desarrollo en **Antigravity / VS Code**.
 
-Aquí tienes el plan de implementación extendido y el **Prompt Maestro** final.
+Aquí tienes el plan de datos y el procedimiento actualizado para tu entorno multiplataforma.
 
 ---
 
-# 🏆 Plan de Implementación Maestro: Wacamaya Sports
+# 📊 Estructura de Tablas (Colecciones Firestore)
 
-**Alcance:** Android, iOS, Windows y Web.
-**Stack:** Flutter SDK + Dart + Firebase (Sin Analíticas para máxima privacidad y velocidad).
-
-## 📊 1. Arquitectura de Datos (Tablas/Colecciones)
-
-Para Firestore, utilizaremos una estructura de colecciones optimizada para escalabilidad y ahorro de lecturas.
-
-### Tabla: `users` (Usuarios)
+### 1. Tabla: `usuarios` (Información de Clientes)
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `uid` | String (PK) | ID generado por Firebase Auth. |
-| `name` | String | Nombre completo del cliente. |
-| `email` | String | Correo electrónico de contacto. |
-| `address` | Map | Objeto con calle, ciudad, CP para envíos. |
-| `role` | String | "client" o "admin" (para gestión de stock). |
-| `createdAt` | Timestamp | Fecha de registro. |
+| `id_usuario` | String (PK) | ID único de Firebase Auth. |
+| `nombre_completo` | String | Nombre y apellido del usuario. |
+| `correo` | String | Email registrado. |
+| `direccion_envio` | Map | Objeto con: `calle`, `ciudad`, `codigo_postal`. |
+| `rol` | String | "cliente" o "administrador". |
+| `fecha_registro` | Timestamp | Fecha en que creó la cuenta. |
 
-### Tabla: `products` (Catálogo)
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `pid` | String (PK) | ID único del producto. |
-| `name` | String | Nombre (Ej: Jersey Real Madrid 2024). |
-| `description` | String | Detalles técnicos y material. |
-| `category` | String | jerseys, shorts, tenis, mochilas, termos. |
-| `price` | Double | Precio de venta. |
-| `stock` | Int | Unidades disponibles. |
-| `sizes` | Array | Lista de tallas disponibles (S, M, L / 27, 28, 29). |
-| `images` | Array | Lista de URLs de Firebase Storage. |
-
-### Tabla: `orders` (Pedidos)
+### 2. Tabla: `productos` (Inventario Deportivo)
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `oid` | String (PK) | ID del pedido. |
-| `userId` | String (FK) | Relación con el comprador. |
-| `items` | Array | Lista de productos (id, qty, price, size). |
-| `total` | Double | Monto total de la transacción. |
-| `status` | String | "pending", "shipped", "delivered". |
-| `timestamp` | Timestamp | Fecha y hora de compra. |
+| `id_producto` | String (PK) | ID autogenerado. |
+| `nombre` | String | Ejemplo: "Jersey Selección Mexicana 2026". |
+| `descripcion` | String | Especificaciones de la prenda o accesorio. |
+| `categoria` | String | jerseys, shorts, tenis, mochilas, termos. |
+| `precio` | Double | Costo en moneda local. |
+| `existencia` | Int | Cantidad de unidades en bodega. |
+| `tallas` | Array | Lista de opciones (Ch, M, G / 25, 26, 27). |
+| `imagenes` | Array | Lista de links de Firebase Storage. |
+
+### 3. Tabla: `pedidos` (Ventas Realizadas)
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id_pedido` | String (PK) | ID de transacción. |
+| `id_cliente` | String (FK) | Relación con el usuario que compró. |
+| `articulos` | Array | Detalle: `id_producto`, `cantidad`, `precio_unitario`, `talla_elegida`. |
+| `total_pago` | Double | Monto final cobrado. |
+| `estado_envio` | String | "pendiente", "enviado", "entregado". |
+| `fecha_compra` | Timestamp | Momento exacto de la transacción. |
 
 ---
 
-## 🛠️ 2. Procedimiento de Desarrollo Extendido
+# 🚀 Procedimiento de Desarrollo Actualizado (Multiplataforma)
 
-### Fase 1: Entorno y Core (Semana 1)
+### Fase 1: Núcleo y Multiplataforma
 
-1. **Configuración Antigravity/VS Code:** Instalación de linters estándar de Google para evitar errores de compilación en Windows/Web.
-2. **Inicialización Multiplataforma:** Ejecutar `flutter create .` y asegurar que las carpetas `android`, `ios`, `windows` y `web` estén correctamente configuradas.
-3. **Firebase Core:** Configurar `firebase_options.dart` para las 4 plataformas.
+* **Configuración Inicial:** Preparar el proyecto para soportar Web (CanvasKit), Windows (C++ nativo), Android (Kotlin) e iOS (Swift).
+* **Estandarización:** Crear una carpeta `core/` donde se definan los colores oficiales (Verde Wacamaya) y tipografías (Oswald/Roboto) para que la marca se vea igual en una PC que en un iPhone.
 
-### Fase 2: Capa de Datos y Providers (Semana 2)
+### Fase 2: Lógica de Datos en Español
 
-1. **Modelado:** Creación de clases Dart con serialización `Map<String, dynamic>` para Firestore.
-2. **Implementación de Providers:**
-* `AuthProvider`: Lógica de persistencia de sesión.
-* `ShopProvider`: Gestión del catálogo y filtros.
-* `CartProvider`: Lógica de cálculo de precios y stock temporal.
+* **Mapeo de Modelos:** Crear las clases en Dart asegurando que los métodos `deMapa()` y `aMapa()` coincidan exactamente con los nombres de los campos de las tablas en español mencionadas arriba.
+* **Seguridad Firestore:** Escribir las reglas de acceso prohibiendo la edición de la tabla `productos` a cualquier usuario que no tenga el `rol: "administrador"`.
 
+### Fase 3: Interfaz de Usuario Adaptativa (Responsive)
 
-
-### Fase 3: UI/UX Multiplataforma (Semana 3)
-
-1. **Responsive Design:** Implementar `LayoutBuilder` para que la tienda se vea como una Web en escritorio y como App nativa en móvil.
-2. **Navegación:** Uso de `NavigationRail` para Windows/Web y `BottomNavigationBar` para móviles.
-
-### Fase 4: Integración y Seguridad (Semana 4)
-
-1. **Reglas de Firestore:** Configurar seguridad para que solo el dueño vea sus pedidos pero cualquiera vea el catálogo.
-2. **Optimización:** Implementación de `CachedNetworkImage` para no consumir datos innecesarios en móviles.
+* **Vistas Dinámicas:** Usar un sistema de rejilla (Grid) que muestre 2 columnas en móviles y hasta 5 columnas en la versión de Windows o Web.
+* **Gestión de Estado:** Implementar el `CarritoProvider` para que, si un usuario agrega un termo desde la Web, la información se mantenga consistente durante la sesión.
 
 ---
 
-## 📦 3. Dependencias Estándar (`pubspec.yaml`)
+# 🤖 Prompt Profesional Final (Optimizado para Antigravity)
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  # Backend
-  firebase_core: ^2.30.0
-  firebase_auth: ^4.19.0
-  cloud_firestore: ^4.17.0
-  # Estado
-  provider: ^6.1.2
-  # Estética y Funcionalidad
-  google_fonts: ^6.2.1
-  cached_network_image: ^3.3.1
-  intl: ^0.19.0
-  font_awesome_flutter: ^10.7.0 # Iconos deportivos profesionales
+Este es el prompt que debes usar para que la IA genere el código con los campos en español y la estructura profesional:
 
-```
-
----
-
-## 🚀 . Prompt Profesional Maestro (Final)
-
-Este prompt está diseñado para que la IA genere el código más robusto y limpio posible para tu proyecto:
-
-> "Actúa como un Ingeniero de Software Senior experto en Flutter y Firebase. Necesito desarrollar la arquitectura base para 'Wacamaya Sports', una app multiplataforma (Android, iOS, Web, Windows).
-> **REQUERIMIENTOS TÉCNICOS:**
-> 1. **Estructura de Carpetas:** Implementa una arquitectura de capas (Clean Architecture): `data/models`, `data/repositories`, `presentation/providers`, `presentation/screens` y `core/theme`.
-> 2. **Base de Datos:** Utiliza las tablas `users`, `products` (con categorías: jerseys, shorts, tenis, mochilas, termos) y `orders` definidas en el plan.
-> 3. **Gestión de Estado:** Configura `MultiProvider` en el `main.dart`. Incluye `AuthProvider` para Firebase Auth y `CartProvider` para la lógica del carrito.
-> 4. **UI Multiplataforma:** Crea un widget de navegación adaptativo que funcione bien en móvil y escritorio.
-> 5. **Modelado:** Genera el modelo `Product` con soporte para tallas (array) y precios (double), incluyendo métodos `fromFirestore` y `toFirestore`.
-> 6. **Estándares:** Usa código limpio, tipado estricto (no dynamic), manejo de errores con try-catch y **no incluyas analíticas ni configuraciones de producción**.
+> "Actúa como un desarrollador experto en Flutter. Genera el código base para la aplicación 'Wacamaya Sports' siguiendo una arquitectura limpia (Clean Architecture).
+> **Especificaciones Técnicas:**
+> 1. **Tablas en Español:** Usa estrictamente los nombres de campos en español para los modelos de datos: `usuarios`, `productos` (con categorías: jerseys, shorts, tenis, mochilas, termos) y `pedidos`.
+> 2. **Multiplataforma:** El código debe ser compatible con Android, iOS, Web y Windows. Asegúrate de incluir la inicialización de Firebase adaptable.
+> 3. **Gestión de Estado:** Implementa `Provider`. Necesito un `AutenticacionProvider` para manejar el ingreso de usuarios y un `TiendaProvider` para gestionar el catálogo de productos desde Firestore.
+> 4. **Seguridad y Estándares:** No utilices analíticas. Usa validaciones de tipos estrictos y manejo de excepciones (try-catch) en las peticiones a la base de datos.
+> 5. **UI:** Crea el modelo de la clase `Producto` con los campos: `id_producto`, `nombre`, `precio`, `categoria`, `tallas` (lista) y `existencia`.
 > 
 > 
-> **ENTREGABLE:** Proporciona la estructura del proyecto, el archivo `pubspec.yaml` completo, el `main.dart` con la configuración de Providers y los modelos de datos principales."
+> Entrégame el archivo `pubspec.yaml`, la estructura de carpetas sugerida y el código del modelo de datos junto con el `main.dart` configurado con los Providers."
 
 ---
-
