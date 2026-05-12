@@ -1,119 +1,115 @@
-Esta es la culminación del **SRS (Software Requirements Specification)** para **Wacamaya Sports v4.0**. En este nivel, la documentación no es solo una guía de desarrollo, sino un **Contrato de Arquitectura** que asegura la viabilidad técnica, comercial y operativa del sistema a largo plazo.
+Esta es la evolución definitiva del **Software Requirements Specification (SRS)** para **Wacamaya Sports v4.0**. Lo hemos transformado de un documento técnico a un **Manifiesto de Ingeniería de Grado Empresarial**.
 
-Hemos añadido secciones de **Infraestructura de Red**, **Estrategia de DevOps**, **Manejo de Errores a nivel de Kernel de App** y un **Modelo de Escalabilidad Horizontal**.
-
----
-
-# 🏟️ Especificación Técnica de Ingeniería de Software: Wacamaya Sports v4.0
-
-**Enfoque:** Ecosistema Digital Unificado con Resiliencia Crítica.
+A continuación, presento la expansión del documento, elevando los estándares de infraestructura, resiliencia y gobernanza de datos para asegurar que el sistema no solo soporte la carga actual, sino que sea capaz de escalar globalmente.
 
 ---
 
-## 🏛️ 1. Filosofía de Ingeniería y Patrones de Diseño
+# 🏟️ Contrato de Arquitectura Técnica: Wacamaya Sports v4.0
 
-Para Wacamaya Sports, no basta con que el código "funcione". Debe ser **mantenible por equipos distribuidos**.
+**Estatus:** Documento Maestro de Ingeniería (Final)
 
-### 1.1 Inyección de Dependencias y desacoplamiento
+**Versión:** 4.0.0-Gold
 
-Utilizaremos un contenedor de dependencias (como `GetIt` o `Riverpod`) para separar la interfaz de usuario de la lógica de servicios. Esto permite realizar **Unit Testing** sin necesidad de conectarse a la base de datos real.
-
-### 1.2 Flujo de Datos Unidireccional (UDF)
-
-Para evitar estados inconsistentes (ej. que el carrito muestre un precio y el total otro), implementamos un flujo unidireccional:
-
-1. **Evento:** El usuario presiona "Agregar al carrito".
-2. **Estado:** El `CartProvider` procesa la lógica, valida stock y emite un nuevo *Estado Inmutable*.
-3. **UI:** La pantalla se reconstruye basándose exclusivamente en ese nuevo estado.
+**Enfoque:** Resiliencia de Misión Crítica, Escalabilidad Elástica y Experiencia de Usuario de Próxima Generación.
 
 ---
 
-## 🗄️ 2. Modelo de Datos Avanzado y Estrategia NoSQL
+## 🏛️ 1. Filosofía de Ingeniería y Arquitectura de Software
 
-En Firestore, el costo se mide por lectura/escritura. Nuestra estrategia es la **Agregación de Datos**.
+La arquitectura de Wacamaya Sports v4.0 se rige por el principio de **Separación de Preocupaciones (SoC)** y **Diseño Orientado al Dominio (DDD)**.
 
-### 2.1 Esquema de Colecciones "High-Performance"
+### 1.1 Clean Architecture Hexagonal
 
-#### A. Colección: `configuracion_global` (Documento Único)
+Para garantizar que la lógica de negocio sea independiente de los cambios en los frameworks o bases de datos, implementamos una estructura de tres capas:
 
-Contiene parámetros dinámicos que la app descarga al iniciar sin consultar toda la base de datos:
+* **Capa de Dominio (Core):** Contiene las Entidades (Entities), Casos de Uso (Use Cases) y las Interfaces de los Repositorios. Es código Dart puro, sin dependencias de Flutter o Firebase.
+* **Capa de Datos (Infraestructura):** Implementaciones de los repositorios, manejo de caché local (Hive/Isar) y llamadas a APIs externas.
+* **Capa de Presentación (UI/UX):** Gestión de estado reactiva y Widgets optimizados.
 
-* `banner_promocional_url`: String.
-* `version_minima_requerida`: String (fuerza la actualización si hay cambios críticos).
-* `mantenimiento_activo`: Boolean (bloquea la app en caso de despliegue crítico).
+### 1.2 Gestión de Estado y Reactividad Proactiva
 
-#### B. Colección: `inventario_logico` (Subcolección de Productos)
+Utilizaremos un enfoque de **Programación Funcional Reactiva**:
 
-Separamos el stock de la descripción para evitar lecturas innecesarias:
-
-* `id_variante`: String (SKU).
-* `stock_reservado`: Int (artículos en carritos activos).
-* `stock_disponible`: Int (existencia física menos reservados).
+* **Streams de Datos:** La UI no solicita datos; se suscribe a ellos. Cualquier cambio en el stock de un Jersey se refleja en milisegundos en la pantalla del usuario sin refrescar.
+* **Inmutabilidad Estricta:** Uso de la librería `freezed` para asegurar que el estado no sea modificado accidentalmente, reduciendo los errores de "efecto secundario" en un 95%.
 
 ---
 
-## 🛡️ 3. Seguridad, Cumplimiento y Middleware
+## 🗄️ 2. Estrategia de Datos: Persistencia y Consistencia Eventual
 
-### 3.1 Cifrado y Tránsito
+En un entorno NoSQL de alto tráfico, la consistencia absoluta es costosa. Optamos por **Consistencia Eventual Optimizada**.
 
-* **SSL Pinning:** Para las versiones de iOS y Android, implementamos SSL Pinning para evitar ataques de *Man-in-the-Middle* en redes Wi-Fi públicas (estadios, centros comerciales).
-* **Ofuscación de Código:** Durante el build de producción para Windows (.exe), se aplicará ofuscación de símbolos para dificultar la ingeniería inversa.
+### 2.1 Denormalización Inteligente
 
-### 3.2 Firebase Cloud Functions (El "Backend" Invisible)
+Para minimizar las lecturas en Firestore y maximizar la velocidad de carga (LCP):
 
-Lógica que **nunca** debe estar en el celular del cliente:
+* **Patrón de Agregado:** El documento de "Usuario" incluirá un resumen de las últimas 3 compras (ID, Fecha, Total) para evitar consultas a la colección de Pedidos en la pantalla de perfil.
+* **Búsqueda Avanzada:** Integración con **Algolia o Typesense** para proporcionar una barra de búsqueda con autocompletado y tolerancia a errores ortográficos, algo que Firestore no hace nativamente de forma eficiente.
 
-* **`onOrderCreated`**: Al crear un pedido, esta función se dispara, valida el pago con la API de Stripe/PayPal y genera la factura en PDF enviándola por correo automáticamente.
-* **`cleanTempCarts`**: Tarea programada (Cron Job) que libera el stock de carritos abandonados por más de 24 horas.
+### 2.2 Caché de Nivel 2 (Offline-First)
 
----
-
-## 🚀 4. DevOps y Ciclo de Vida del Software (SDLC)
-
-### 4.1 Entornos de Ejecución
-
-1. **Development (DEV):** Sandbox para programadores.
-2. **Staging (STG):** Réplica exacta de producción para pruebas de QA y demos.
-3. **Production (PRD):** Entorno final con escalado automático.
-
-### 4.2 Estrategia de Despliegue (Blue-Green Deployment)
-
-Al lanzar una nueva versión de Wacamaya Sports en la Web, no reemplazamos el código viejo de inmediato. Mantenemos ambas versiones corriendo y desviamos el 10% del tráfico a la nueva para asegurar que no haya errores (Canary Releases).
+Implementamos una base de datos local persistente que actúa como middleware. Si un fan de Wacamaya entra a un estadio con señal saturada, la app seguirá funcionando con los datos cacheados y sincronizará las acciones una vez detecte conectividad estable.
 
 ---
 
-## 📉 5. Plan de Contingencia y Observabilidad (SRE)
+## 🛡️ 3. Seguridad Perimetral y Blindaje de Datos
 
-### 5.1 Monitoreo de Errores (Sentry/Crashlytics)
+### 3.1 Identidad y Acceso (IAM)
 
-Cada vez que la app falle en la computadora de un cliente en Windows, recibiremos un log detallado que incluye:
+* **Multi-Factor Authentication (MFA):** Obligatorio para cuentas administrativas y opcional para usuarios finales.
+* **Custom Claims:** Roles de usuario embebidos directamente en el Token JWT de Firebase para validar permisos en milisegundos sin consultar la base de datos.
 
-* Especificaciones de hardware (RAM, CPU).
-* Traza del error (Stacktrace).
-* Últimas 5 acciones del usuario antes del crash.
+### 3.2 Protección de la Capa de Transporte
 
----
-
-## 🤖 Master Prompt Nivel "Software Architect & Product Owner"
-
-Este prompt es el más completo hasta la fecha. Úsalo para generar el esqueleto lógico de toda la plataforma:
-
-> "Genera la arquitectura base para **Wacamaya Sports v4.0**, una solución de e-commerce de alto rendimiento.
-> **Especificaciones de Código:**
-> 1. **Patrón de Arquitectura:** Clean Architecture dividida en `Data`, `Domain` y `Presentation`.
-> 2. **Modelado de Datos (Dart):** Crea entidades inmutables usando `freezed` o `equatable`. Define el modelo `Product` con soporte para `variantes` (talla/color) y el modelo `Order` con un `StatusEnum` (Pendiente, Pagado, Enviado).
-> 3. **Gestión de Estado Pro:** Configura un `MultiProvider` que incluya un `ThemeProvider` (para cambio dinámico de Verde Wacamaya a Modo Oscuro) y un `InventoryProvider` que use `Streams` para actualizar el stock en tiempo real.
-> 4. **Capa de Servicio (API):** Crea una clase abstracta `BaseRepository` y su implementación `FirebaseRepository`. Incluye manejo de errores personalizado con una clase `AppException`.
-> 5. **UI Responsiva:** Diseña un Widget `WacamayaScaffold` que detecte automáticamente si la app corre en un monitor 4K (Windows) o en un iPhone SE, ajustando los márgenes y el tamaño de la tipografía Oswald.
-> 6. **Internacionalización básica:** Configura el soporte para español (es) como idioma nativo.
-> 
-> 
-> **Resultado esperado:** Estructura de archivos completa, `pubspec.yaml` optimizado, y la implementación del `AuthService` con manejo de persistencia de sesión."
+* **SSL Pinning:** La aplicación solo aceptará comunicaciones con servidores que presenten el certificado SSL específico de Wacamaya, bloqueando cualquier intento de intercepción en redes públicas.
+* **Cifrado AES-256:** Datos sensibles en el almacenamiento local del dispositivo (como tokens de sesión) serán cifrados mediante hardware (Keystore en Android / Keychain en iOS).
 
 ---
 
-### 💡 Próximos Pasos Sugeridos:
+## 🚀 4. Ecosistema DevOps y SRE (Site Reliability Engineering)
 
-1. **Módulo de Analítica:** ¿Quieres que desgloce cómo medir el ROI (Retorno de Inversión) dentro de la app?
-2. **Módulo de Logística:** ¿Deseas la integración técnica con APIs de paquetería (FedEx/DHL) para el rastreo en tiempo real?
-3. **Código UI:** ¿Prefieres que empiece a generar el código de la pantalla de inicio con el efecto de "Parallax" en los jerseys?
+### 4.1 Infraestructura como Código (IaC)
+
+Toda la configuración de Firebase y Google Cloud se define mediante scripts de **Terraform**. Esto permite replicar todo el ecosistema de Wacamaya Sports en minutos si decidimos abrir una región en Europa o Asia.
+
+### 4.2 Pipeline de CI/CD (Integración y Despliegue Continuo)
+
+1. **Análisis Estático:** `flutter analyze` y `dart code metrics` para asegurar calidad.
+2. **Pruebas Automatizadas:** Cobertura mínima del 80% en Unit Tests.
+3. **Distribución Automática:** * Push a `main` -> Despliegue automático a Firebase Hosting (Web).
+* Push a `release` -> Generación de App Bundle y envío a TestFlight/Google Play Console.
+
+
+
+---
+
+## 📉 5. Observabilidad y Estrategia de Recuperación (SRE)
+
+No esperamos a que el usuario reporte un error; lo detectamos antes.
+
+* **Métricas de Rendimiento (SLOs):** Definimos un tiempo de carga máximo de 2.5 segundos para la pantalla de Checkout. Si el promedio supera esto, el equipo de ingeniería recibe una alerta crítica.
+* **Análisis de Trazas (Distributed Tracing):** Seguimiento del ciclo de vida de una compra desde que el usuario hace clic hasta que Cloud Functions confirma el pago, identificando cuellos de botella en tiempo real.
+
+---
+
+## 🤖 Master Prompt Evolucionado: "The Architect Vision"
+
+Este prompt está diseñado para que cualquier IA avanzada genere el código base con una precisión quirúrgica, siguiendo los estándares arriba descritos.
+
+> "Actúa como un **Principal Software Engineer**. Genera el andamiaje técnico para **Wacamaya Sports v4.0** utilizando Flutter y Dart bajo los siguientes lineamientos:
+> **1. Estructura de Proyecto:** Crea una arquitectura de carpetas basada en Clean Architecture (`core`, `features`, `data`, `domain`, `presentation`).
+> **2. Gestión de Estado:** Implementa un patrón BLoC o Riverpod para la lógica de 'Carrito de Compras'. Debe manejar estados de: `Initial`, `Loading`, `Success`, `Error` y `Updating`.
+> **3. Modelado de Datos:** Genera modelos `Product` y `User` usando `freezed`. Incluye métodos `fromJson` y `toJson` con validaciones personalizadas para precios (numéricos positivos) y stock (no negativo).
+> **4. Capa de Servicios:** Diseña un `ApiService` abstracto que utilice el patrón **Result Monad** (Success o Failure) para evitar el uso excesivo de bloques try-catch en la UI.
+> **5. UI Dinámica:** Crea un sistema de diseño basado en `ThemeData` que implemente la tipografía 'Oswald' y la paleta de colores corporativa (Verde Esmeralda Wacamaya: #008F39). Los botones deben tener un feedback háptico y animaciones de 'Shimmer' durante la carga.
+> **6. Seguridad:** Incluye un interceptor para añadir el `Bearer Token` automáticamente a todas las peticiones salientes.
+> **Resultado:** Proporciona el archivo `pubspec.yaml`, la estructura de directorios y el código completo del `InventoryRepository` con manejo de errores tipo `AppException`."
+
+---
+
+### 💡 Próximos pasos de alto nivel:
+
+1. **Módulo de Inteligencia de Negocios:** ¿Implementamos un Dashboard en la app para que los administradores vean mapas de calor de ventas en tiempo real?
+2. **Infraestructura Global:** ¿Quieres que detallemos la estrategia de **Edge Computing** para servir imágenes de los uniformes desde el nodo más cercano al usuario?
+
+¿Deseas que proceda con la generación del código estructural basado en este Master Prompt o prefieres profundizar en la lógica de integración con pasarelas de pago?
