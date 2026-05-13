@@ -95,58 +95,43 @@ A continuación, presento el andamiaje de código que materializa los principios
 
 ### 6.1 `pubspec.yaml` - Dependencias de Misión Crítica
 
-```yaml
-name: wacamaya_sports_v4
-description: Wacamaya Sports - Resiliencia de Misión Crítica
-version: 4.0.0+1
-publish_to: 'none'
+Riverpod
 
-environment:
-  sdk: '>=3.0.0 <4.0.0'
+Flutter Riverpod
 
-dependencies:
-  flutter:
-    sdk: flutter
+Freezed Annotation
 
-  # Arquitectura y Estado
-  riverpod: ^2.4.0
-  flutter_riverpod: ^2.4.0
-  freezed_annotation: ^2.4.1
+RxDart
 
-  # Reactividad y Streams
-  rxdart: ^0.27.7
+Hive Flutter
 
-  # Persistencia y Modelado
-  hive_flutter: ^1.1.0
-  hive: ^2.2.3
-  json_annotation: ^4.8.1
+Hive
 
-  # Networking y Seguridad
-  dio: ^5.3.2
-  dio_secure_storage: ^1.0.0
-  flutter_secure_storage: ^9.0.0
+JSON Annotation
 
-  # Utilidades
-  equatable: ^2.0.5
-  dartz: ^0.10.1
-  shimmer: ^3.0.0
+Dio
 
-  # UI y Feedback Háptico
-  flutter_haptics: ^1.0.1
+Dio Secure Storage
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  build_runner: ^2.4.6
-  freezed: ^2.4.2
-  json_serializable: ^6.7.1
-  hive_generator: ^2.0.0
+Flutter Secure Storage
 
-flutter:
-  uses-material-design: true
-  assets:
-    - assets/fonts/
-    - assets/shimmer/
+Equatable
+
+Dartz
+
+Shimmer
+
+Flutter Haptics
+
+Flutter Test
+
+Build Runner
+
+Freezed
+
+JSON Serializable
+
+Hive Generator
 ```
 
 ### 6.2 Estructura de Directorios
